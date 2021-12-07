@@ -17,11 +17,15 @@ class CharacterStat:
         return self.__fullname[:3].upper()
 
     @property
-    def modifier(self) -> int:
+    def modifier(self) -> Optional[int]:
+        if not self.value:
+            return None
         return int((self.value - 10) / 2)
 
     @property
-    def value(self) -> int:
+    def value(self) -> Optional[int]:
+        if self.base_value is None or self.bonus is None:
+            return None
         return self.base_value + self.bonus
 
     def __add__(self, value):
@@ -29,6 +33,11 @@ class CharacterStat:
         return self
 
     def __repr__(self):
+        return 'CharacterStat("%s", base_value=%r, bonus=%r)' % (self.full_name,
+                                                                self.base_value,
+                                                                self.bonus)
+
+    def __str__(self):
         repr_line = '<CharacterStat: %s (%s) [%i (Mod %+i; Bonus %+i)]>'
         return repr_line % (self.full_name, self.abbr, self.value,
                             self.modifier, self.bonus)
@@ -69,5 +78,21 @@ class Character:
         return self.STR, self.DEX, self.CON, self.INT, self.WIS, self.CHA
 
     def __repr__(self):
+        return ('Character("%s", race="%s", class_="%s", '
+                'str_bonus=%r, str_score=%r, '
+                'dex_bonus=%r, dex_score=%r, '
+                'con_bonus=%r, con_score=%r, '
+                'int_bonus=%r, int_score=%r, '
+                'wis_bonus=%r, wis_score=%r, '
+                'cha_bonus=%r, cha_score=%r)') % (
+                self.name, self.race, self.class_,
+                self.STR.value, self.STR.bonus,
+                self.DEX.value, self.DEX.bonus,
+                self.CON.value, self.CON.bonus,
+                self.INT.value, self.INT.bonus,
+                self.WIS.value, self.WIS.bonus,
+                self.CHA.value, self.CHA.bonus)
+
+    def __str__(self):
         return '<Character: %s, %s %s %s>' % (self.name, self.race,
                                               self.class_, self.stats)

@@ -65,11 +65,14 @@ class DieResult:
     def __ne__(self, value):
         return int(self) != float(value)
 
-    def __repr__(self):
+    def __str__(self):
         if self.result:
             return '<DieResult: %i (d%i)>' % (self.result, self.die_max_value)
         else:
             return '<DieResult: Undecided>'
+
+    def __repr__(self):
+        return 'DieResult(%s, result=%s)' % (self.die_max_value, self.result)
 
 DieResultSet = Union[Iterable[DieResult],Generator[DieResult, None, None]]
 
@@ -102,6 +105,9 @@ class DiceResult:
         return self
 
     def __repr__(self):
+        return 'DiceResult%r' % (self.rolls,)
+
+    def __str__(self):
         rolls = ', '.join(self.str_results)
         return '<DiceResult: %i (Rolled %s; Mod %+i)>' % (self.total,
                                                           rolls,
