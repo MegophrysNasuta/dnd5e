@@ -72,9 +72,43 @@ class DieResult:
             return '<DieResult: Undecided>'
 
 
+class DiceResult:
+    """Summed iterable of DieResults"""
+
+    def __init__(self, *results: Iterable[DieResult]):
+        self.rolls = tuple(results)
+        self.modifier = 0
+
+    @property
+    def total(self):
+        return sum(map(int, self.rolls)) + self.modifier
+
+    @property
+    def int_results(self):
+        return map(int, self.rolls)
+
+    @property
+    def str_results(self):
+        return map(str, self.int_results)
+
+    def __add__(self, value):
+        self.modifier = int(value)
+        return self
+
+    def __sub__(self, value):
+        self.modifier = -int(value)
+        return self
+
+    def __repr__(self):
+        rolls = ', '.join(self.str_results)
+        return '<DiceResult: %i (Rolled %s; Mod %+i)>' % (self.total,
+                                                          rolls,
+                                                          self.modifier)
+
+
 def roll_dice(mDn: str,
               rerolling_if: Iterable[str]=None,
-              dropping_lowest: bool=False) -> Generator[DieResult, None, None]:
+              dropping_lowest: bool=False) -> DiceResult:
     """
     Syntactic sugar for roll with other functions as options.
 
@@ -91,7 +125,8 @@ def roll_dice(mDn: str,
         rolls = reroll_if(rolls, rerolling_if)
     if dropping_lowest:
         rolls = drop_lowest(rolls)
-    return rolls
+
+    return DiceResult(*rolls)
 
 
 def roll(mDn: str) -> Generator[DieResult, None, None]:
