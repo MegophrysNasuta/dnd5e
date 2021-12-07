@@ -71,11 +71,13 @@ class DieResult:
         else:
             return '<DieResult: Undecided>'
 
+DieResultSet = Union[Iterable[DieResult],Generator[DieResult, None, None]]
+
 
 class DiceResult:
     """Summed iterable of DieResults"""
 
-    def __init__(self, *results: Iterable[DieResult]):
+    def __init__(self, *results: DieResultSet):
         self.rolls = tuple(results)
         self.modifier = 0
 
@@ -129,7 +131,7 @@ def roll_dice(mDn: str,
     return DiceResult(*rolls)
 
 
-def roll(mDn: str) -> Generator[DieResult, None, None]:
+def roll(mDn: str) -> DieResultSet:
     """
     Roll mDn, a standard dice signifier like '3d6' (m=3, n=6)
 
@@ -186,8 +188,8 @@ def parse_condition(condition: str) -> Tuple[Callable[[int, int], bool], int]:
     return real_op, val
 
 
-def reroll_if(rolls: Iterable[DieResult],
-              conditions: Union[str, Iterable[str]]) -> Iterable[DieResult]:
+def reroll_if(rolls: DieResultSet,
+              conditions: Union[str, Iterable[str]]) -> DieResultSet:
     if isinstance(conditions, str):
         conditions = (conditions,)
 
@@ -198,7 +200,7 @@ def reroll_if(rolls: Iterable[DieResult],
             yield roll
 
 
-def drop_lowest(rolls: Iterable[DieResult]) -> Iterable[DieResult]:
+def drop_lowest(rolls: DieResultSet) -> DieResultSet:
     result = list(rolls)
     result.remove(min(result))
     return result
