@@ -89,4 +89,28 @@ def test_swing_weapon():
     assert ar.damage_roll is not None
     assert ar.proficiency_bonus == char.proficiency_bonus
     assert ar.modifier == char.DEX.modifier
+    assert ar.damage_roll.die_max_value == 6
     assert char.DEX.modifier < ar.damage <= char.DEX.modifier + 6
+
+    longsword = Weapon('Longsword', '1d8', '1d10', versatile=True,
+                       damage_type=WeaponDamageType.SLASHING)
+    char.wield_main(longsword)
+    assert char.wielding == (longsword, None)
+
+    ar = char.attack(dummy)
+    assert ar.hit_type == HitType.FULL
+    assert ar.attack_roll is not None
+    assert ar.damage_roll is not None
+    assert ar.proficiency_bonus == char.proficiency_bonus
+    assert ar.modifier == char.STR.modifier
+    assert ar.damage_roll.die_max_value == 8
+    assert char.STR.modifier < ar.damage <= char.STR.modifier + 8
+
+    ar = char.attack(dummy, using_two_hands=True)
+    assert ar.hit_type == HitType.FULL
+    assert ar.attack_roll is not None
+    assert ar.damage_roll is not None
+    assert ar.proficiency_bonus == char.proficiency_bonus
+    assert ar.modifier == char.STR.modifier
+    assert ar.damage_roll.die_max_value == 10
+    assert char.STR.modifier < ar.damage <= char.STR.modifier + 10
