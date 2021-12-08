@@ -1,7 +1,7 @@
 import operator
 import random
 import re
-from typing import Callable, Generator, Iterable, Tuple, Union
+from typing import Callable, Generator, Iterable, Optional, Tuple, Union
 
 
 class DieResult:
@@ -9,8 +9,7 @@ class DieResult:
     Stores a max_die_value (e.g. 6 for a 6-sided die) and result, making them
     resistant to rewrites once set.
     """
-
-    def __init__(self, die_max_value, result=None):
+    def __init__(self, die_max_value: int, result: Optional[int]=None):
         self.__die_max_value = int(die_max_value)
         self.__result =  None
         if result is not None:
@@ -83,6 +82,16 @@ class DiceResult:
     def __init__(self, *results: DieResultSet):
         self.rolls = tuple(results)
         self.modifier = 0
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return all(roll.result == other_roll.result and
+                   roll.die_max_value == other_roll.die_max_value
+                   for roll, other_roll in zip(self.rolls, other.rolls))
+
+    def __len__(self):
+        return len(self.rolls)
 
     @property
     def total(self):

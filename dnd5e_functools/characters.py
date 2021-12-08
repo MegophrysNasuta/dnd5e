@@ -3,9 +3,9 @@ from .items import Armor
 
 
 class CharacterStat:
-    def __init__(self, name: str, base_value: Optional[int]=None,
+    def __init__(self, full_name: str, base_value: Optional[int]=None,
                  bonus: Optional[int]=None):
-        self.__fullname = str(name)
+        self.__fullname = str(full_name)
         self.base_value = base_value and int(base_value) or 10
         self.bonus = bonus and int(bonus) or 0
 
@@ -33,9 +33,9 @@ class CharacterStat:
         return self
 
     def __repr__(self):
-        return 'CharacterStat("%s", base_value=%r, bonus=%r)' % (self.full_name,
-                                                                self.base_value,
-                                                                self.bonus)
+        return 'CharacterStat(%r, base_value=%r, bonus=%r)' % (self.full_name,
+                                                               self.base_value,
+                                                               self.bonus)
 
     def __str__(self):
         str_rep_line = '<CharacterStat: %s (%s) [%i (Mod %+i; Bonus %+i)]>'
@@ -120,12 +120,12 @@ class Character:
                 self.name, self.race, self.class_,
                 self.base_armor_class, self.armor,
                 self.uses_shield, self.include_stats_in_AC,
-                self.STR.value, self.STR.bonus,
-                self.DEX.value, self.DEX.bonus,
-                self.CON.value, self.CON.bonus,
-                self.INT.value, self.INT.bonus,
-                self.WIS.value, self.WIS.bonus,
-                self.CHA.value, self.CHA.bonus)
+                self.STR.bonus, self.STR.base_value,
+                self.DEX.bonus, self.DEX.base_value,
+                self.CON.bonus, self.CON.base_value,
+                self.INT.bonus, self.INT.base_value,
+                self.WIS.bonus, self.WIS.base_value,
+                self.CHA.bonus, self.CHA.base_value)
 
     def __str__(self):
         return '<Character: %s, %s %s %s>' % (self.name, self.race,
