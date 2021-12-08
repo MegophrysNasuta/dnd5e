@@ -31,6 +31,16 @@ def repr_test(obj):
         Optional[ArmorType]: ArmorType.MEDIUM,
         Optional[WeaponDamageType]: WeaponDamageType.SLASHING,
         Optional[typing.Tuple[int, int]]: (20, 60),
+        'Optional[str]': "a string",
+        'int': 14,    # bonus: guaranteed random
+        'str': "A Required String",
+        'Optional[Armor]': Armor('Leather armor', 11),
+        'bool': True,
+        'Tuple[str, ...]': tuple('abc'),
+        'Optional[int]': 5,
+        'Optional[ArmorType]': ArmorType.MEDIUM,
+        'Optional[WeaponDamageType]': WeaponDamageType.SLASHING,
+        'Optional[Tuple[int, int]]': (20, 60),
     }
 
     init_kw = {}

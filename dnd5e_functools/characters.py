@@ -1,5 +1,28 @@
+from __future__ import annotations
+
+import enum
 from typing import Optional, Tuple
-from .items import Armor
+from .dicerolls import roll, DieResult
+from .items import Armor, Weapon
+
+
+class HitType(enum.Enum):
+    FULL = enum.auto()
+    SHIELD_GLANCE = enum.auto()
+    ARMOR_GLANCE = enum.auto()
+
+
+class AttackResult:
+    def __init__(self, hit_type: Optional[HitType]=None, damage: int=0,
+                 attack_roll: Optional[DieResult]=None, modifier: int=0,
+                 proficiency_bonus: int=0,
+                 damage_roll: Optional[DieResult]=None):
+        self.hit_type = hit_type
+        self.damage = int(damage)
+        self.attack_roll = attack_roll
+        self.damage_roll = damage_roll
+        self.modifier = int(modifier)
+        self.proficiency_bonus = int(proficiency_bonus)
 
 
 class CharacterStat:
@@ -55,6 +78,7 @@ class Character:
                  armor: Optional[Armor]=None,
                  uses_shield: bool=False,
                  include_stats_in_AC: Tuple[str, ...]=(),
+                 proficiency_bonus: int=2,
                  str_bonus: Optional[int]=None,
                  str_score: Optional[int]=None,
                  dex_bonus: Optional[int]=None,
@@ -74,12 +98,15 @@ class Character:
         self.armor = armor
         self.uses_shield = bool(uses_shield)
         self.include_stats_in_AC = tuple(include_stats_in_AC)
+        self.proficiency_bonus = int(proficiency_bonus)
         self.STR = CharacterStat('Strength', str_score, str_bonus)
         self.DEX = CharacterStat('Dexterity', dex_score, dex_bonus)
         self.CON = CharacterStat('Constitution', con_score, con_bonus)
         self.INT = CharacterStat('Intelligence', int_score, int_bonus)
         self.WIS = CharacterStat('Wisdom', wis_score, wis_bonus)
         self.CHA = CharacterStat('Charisma', cha_score, cha_bonus)
+        self.__main_hand: Optional[Weapon] = None
+        self.__off_hand: Optional[Weapon] = None
 
     @property
     def AC(self) -> int:
@@ -103,13 +130,72 @@ class Character:
 
         return ac
 
+    def attack(self, other: Character, main_hand: bool=True,
+               using_two_hands: bool=False, ranged: bool=False) -> AttackResult:
+        if not isinstance(other, Character):
+            raise ValueError("Unsure how to attack a(n) "
+                             "%s." % other.__class__.__name__)
+
+        damage = None
+        weapon = None
+        if using_two_hands and self.wielding[0] is not None:
+            damage = self.wielding[0].two_handed_damage
+            weapon = self.wielding[0]
+        elif main_hand and self.wielding[0] is not None:
+            damage = self.wielding[0].damage
+            weapon = self.wielding[0]
+        elif not main_hand and self.wielding[1] is not None:
+            damage = self.wielding[1].damage
+            weapon = self.wielding[1]
+
+        if damage is None:
+            damage = '1d4'
+
+        if ranged:
+            modifier = self.DEX.modifier
+        else:
+            if weapon and weapon.finesse_weapon:
+                modifier = max(self.STR.modifier, self.DEX.modifier)
+            else:
+                modifier = self.STR.modifier
+
+        attack_roll = tuple(roll('1d20'))[0]
+        attack_roll += modifier + self.proficiency_bonus
+        result = AttackResult(
+            attack_roll=attack_roll,
+            modifier=modifier,
+            proficiency_bonus=self.proficiency_bonus,
+        )
+        if attack_roll > other.AC:
+            damage_roll = tuple(roll(damage))[0]
+            result.damage_roll = damage_roll
+            result.hit_type = HitType.FULL
+            result.damage = damage_roll + modifier
+        elif other.uses_shield and attack_roll > (other.AC - 2):
+            result.hit_type = HitType.SHIELD_GLANCE
+        elif attack_roll > 10:
+            result.hit_type = HitType.ARMOR_GLANCE
+
+        return result
+
     @property
     def stats(self) -> CharacterStats:
         return self.STR, self.DEX, self.CON, self.INT, self.WIS, self.CHA
 
+    def wield_main(self, weapon: Weapon):
+        self.__main_hand = weapon
+
+    def wield_off(self, weapon: Weapon):
+        self.__off_hand = weapon
+        self.uses_shield = False
+
+    @property
+    def wielding(self) -> Tuple[Optional[Weapon], Optional[Weapon]]:
+        return (self.__main_hand, self.__off_hand)
+
     def __repr__(self):
         return ('Character("%s", race="%s", class_="%s", '
-                'base_armor_class=%r, armor=%r, '
+                'base_armor_class=%r, armor=%r, proficiency_bonus=%r, '
                 'uses_shield=%r, include_stats_in_AC=%r, '
                 'str_bonus=%r, str_score=%r, '
                 'dex_bonus=%r, dex_score=%r, '
@@ -118,7 +204,7 @@ class Character:
                 'wis_bonus=%r, wis_score=%r, '
                 'cha_bonus=%r, cha_score=%r)') % (
                 self.name, self.race, self.class_,
-                self.base_armor_class, self.armor,
+                self.base_armor_class, self.armor, self.proficiency_bonus,
                 self.uses_shield, self.include_stats_in_AC,
                 self.STR.bonus, self.STR.base_value,
                 self.DEX.bonus, self.DEX.base_value,

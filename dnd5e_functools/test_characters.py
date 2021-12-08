@@ -1,6 +1,6 @@
 import pytest
-from .characters import Character, CharacterStat
-from .items import Armor, Weapon
+from .characters import Character, CharacterStat, HitType
+from .items import Armor, Weapon, WeaponDamageType
 
 
 def test_armor_class():
@@ -61,6 +61,7 @@ def test_character_stats():
         (27, 8), (28, 9),
         (29, 9), (30, 10),
     )
+
     for score, expected_mod in expected_mods:
         stat = CharacterStat('', score)
         assert stat.modifier == expected_mod
@@ -70,3 +71,22 @@ def test_character_stats():
     assert stat.value == 12
     assert stat.modifier == 1
 
+
+def test_swing_weapon():
+    char = Character('Test', str_score=16, dex_score=17, dex_bonus=1)
+    shortsword = Weapon('Shortsword', '1d6', finesse_weapon=True, is_light=True,
+                        damage_type=WeaponDamageType.PIERCING)
+    assert char.wielding == (None, None)
+    char.wield_main(shortsword)
+    assert char.wielding == (shortsword, None)
+
+    dummy = Character('Dummy', base_armor_class=0, str_score=10)
+    assert dummy.AC == 0
+
+    ar = char.attack(dummy)
+    assert ar.hit_type == HitType.FULL
+    assert ar.attack_roll is not None
+    assert ar.damage_roll is not None
+    assert ar.proficiency_bonus == char.proficiency_bonus
+    assert ar.modifier == char.DEX.modifier
+    assert char.DEX.modifier < ar.damage <= char.DEX.modifier + 6
