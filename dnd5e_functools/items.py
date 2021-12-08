@@ -2,6 +2,37 @@ import enum
 from typing import List, Optional, Tuple
 
 
+class ArmorType(enum.Enum):
+    LIGHT = enum.auto()
+    MEDIUM = enum.auto()
+    HEAVY = enum.auto()
+
+
+class Armor:
+    def __init__(self, name: str, armor_class: int,
+                 armor_type: Optional[ArmorType]=None,
+                 max_dex_modifier: Optional[int]=None,
+                 min_str_requirement: Optional[int]=None,
+                 disadvantages_stealth: bool=False):
+        self.name = str(name)
+        self.armor_class = int(armor_class)
+        self.armor_type = armor_type
+        self.max_dex_modifier = max_dex_modifier and int(max_dex_modifier)
+        self.min_str_requirement = min_str_requirement and int(min_str_requirement)
+        self.disadvantages_stealth = bool(disadvantages_stealth)
+
+    def __repr__(self):
+        return ('Armor("%s", %r, armor_type=%r, max_dex_modifier=%r, '
+                'min_str_requirement=%r, disadvantages_stealth=%r)') % (
+                self.name, self.armor_class, self.armor_type,
+                self.max_dex_modifier, self.min_str_requirement,
+                self.disadvantages_stealth)
+
+    def __str__(self):
+        return '<%sArmor: %s (AC %i)>' % (self.armor_type.name.title(),
+                                          self.name, self.armor_class)
+
+
 RangeIncrement = Tuple[int, int]
 
 
@@ -12,7 +43,7 @@ class WeaponDamageType(enum.Enum):
 
 
 class Weapon:
-    def __init__(self, name: Optional[str]=None, damage: Optional[str]=None,
+    def __init__(self, name: str, damage: Optional[str]=None,
                  two_handed_damage: Optional[str]=None,
                  damage_type: Optional[WeaponDamageType]=None,
                  is_simple: bool=False,
@@ -22,7 +53,7 @@ class Weapon:
                  slow_loading: bool=False, has_reach: bool=False,
                  can_be_thrown: bool=False, requires_two_hands: bool=False,
                  versatile: bool=False):
-        self.name = name and str(name)
+        self.name = str(name)
         self.damage = damage and str(damage)
         self.two_handed_damage = two_handed_damage and str(two_handed_damage)
         self.damage_type = damage_type
