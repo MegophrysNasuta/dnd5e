@@ -24,6 +24,19 @@ def test_armor_class():
     assert char.AC == 14
 
 
+def test_proficiency_bonus():
+    expected_bonus_by_lvl = (
+        (1, 2), (2, 2), (3, 2), (4, 2),
+        (5, 3), (6, 3), (7, 3), (8, 3),
+        (9, 4), (10, 4), (11, 4), (12, 4),
+        (13, 5), (14, 5), (15, 5), (16, 5),
+        (17, 6), (18, 6), (19, 6), (20, 6),
+    )
+
+    for lvl, bonus in expected_bonus_by_lvl:
+        assert Character(level=lvl).proficiency_bonus == bonus
+
+
 def test_character_stats():
     stat = CharacterStat('strength')
     assert stat.abbr == 'STR'
@@ -114,3 +127,13 @@ def test_swing_weapon():
     assert ar.modifier == char.STR.modifier
     assert ar.damage_roll.die_max_value == 10
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 10
+
+    char.wield_main(None)
+    ar = char.attack(dummy)
+    assert ar.hit_type == HitType.FULL
+    assert ar.attack_roll is not None
+    assert ar.damage_roll is not None
+    assert ar.proficiency_bonus == char.proficiency_bonus
+    assert ar.modifier == char.STR.modifier
+    assert ar.damage_roll.die_max_value == 4
+    assert char.STR.modifier < ar.damage <= char.STR.modifier + 4

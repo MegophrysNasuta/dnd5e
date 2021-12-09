@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 from typing import Optional, Tuple
-from .dicerolls import roll, DieResult
+from .dicerolls import roll, DieResult, DiceResult
 from .items import Armor, Weapon
 
 
@@ -78,7 +78,8 @@ class Character:
                  armor: Optional[Armor]=None,
                  uses_shield: bool=False,
                  include_stats_in_AC: Tuple[str, ...]=(),
-                 proficiency_bonus: int=2,
+                 level: int=1, hit_dice: Optional[DiceResult]=None,
+                 wounds: int=0,
                  str_bonus: Optional[int]=None,
                  str_score: Optional[int]=None,
                  dex_bonus: Optional[int]=None,
@@ -98,7 +99,11 @@ class Character:
         self.armor = armor
         self.uses_shield = bool(uses_shield)
         self.include_stats_in_AC = tuple(include_stats_in_AC)
-        self.proficiency_bonus = int(proficiency_bonus)
+        self.level = int(level)
+        self.hit_dice = hit_dice
+        self.wounds = int(wounds)
+        if self.hit_dice:
+            assert len(self.hit_dice) == self.level
         self.STR = CharacterStat('Strength', str_score, str_bonus)
         self.DEX = CharacterStat('Dexterity', dex_score, dex_bonus)
         self.CON = CharacterStat('Constitution', con_score, con_bonus)
@@ -171,6 +176,7 @@ class Character:
             result.damage_roll = damage_roll
             result.hit_type = HitType.FULL
             result.damage = damage_roll + modifier
+            other.wounds += result.damage
         elif other.uses_shield and attack_roll > (other.AC - 2):
             result.hit_type = HitType.SHIELD_GLANCE
         elif attack_roll > 10:
@@ -179,13 +185,54 @@ class Character:
         return result
 
     @property
+    def hp(self) -> int:
+        return self.maxhp - self.wounds
+
+    @property
+    def hp_percent(self) -> float:
+        if self.maxhp == 0:
+            return 0.
+        return self.hp / self.maxhp
+
+    @property
+    def hp_status(self) -> str:
+        if self.hp < 1:
+            return 'dead'
+        elif self.hp_percent < 11:
+            return 'critically wounded'
+        elif self.hp_percent < 25:
+            return 'badly wounded'
+        elif self.hp_percent < 50:
+            return 'bloodied'
+        elif self.hp_percent < 70:
+            return 'injured'
+        elif self.hp_percent < 90:
+            return 'roughed up'
+        elif self.hp_percent < 99:
+            return 'slightly injured'
+        else:
+            return 'unscathed'
+
+    @property
+    def maxhp(self) -> int:
+        if not self.hit_dice:
+            return 0
+        return sum(self.hit_dice) + (self.CON.modifier * self.level)
+
+    @property
+    def proficiency_bonus(self) -> int:
+        return 2 + ((self.level - 1) // 4)
+
+    @property
     def stats(self) -> CharacterStats:
         return self.STR, self.DEX, self.CON, self.INT, self.WIS, self.CHA
 
-    def wield_main(self, weapon: Weapon):
+    def wield_main(self, weapon: Optional[Weapon]):
         self.__main_hand = weapon
+        if weapon is not None and weapon.requires_two_hands:
+            self.wield_off(None)
 
-    def wield_off(self, weapon: Weapon):
+    def wield_off(self, weapon: Optional[Weapon]):
         self.__off_hand = weapon
         self.uses_shield = False
 
@@ -195,8 +242,9 @@ class Character:
 
     def __repr__(self):
         return ('Character("%s", race="%s", class_="%s", '
-                'base_armor_class=%r, armor=%r, proficiency_bonus=%r, '
+                'base_armor_class=%r, armor=%r, level=%r, '
                 'uses_shield=%r, include_stats_in_AC=%r, '
+                'hit_dice=%r, wounds=%r, '
                 'str_bonus=%r, str_score=%r, '
                 'dex_bonus=%r, dex_score=%r, '
                 'con_bonus=%r, con_score=%r, '
@@ -204,8 +252,9 @@ class Character:
                 'wis_bonus=%r, wis_score=%r, '
                 'cha_bonus=%r, cha_score=%r)') % (
                 self.name, self.race, self.class_,
-                self.base_armor_class, self.armor, self.proficiency_bonus,
+                self.base_armor_class, self.armor, self.level,
                 self.uses_shield, self.include_stats_in_AC,
+                self.hit_dice, self.wounds,
                 self.STR.bonus, self.STR.base_value,
                 self.DEX.bonus, self.DEX.base_value,
                 self.CON.bonus, self.CON.base_value,

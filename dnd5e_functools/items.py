@@ -91,12 +91,14 @@ class Weapon:
         self.__can_be_thrown = None
         self.can_be_thrown = bool(can_be_thrown)
         if self.can_be_thrown:
-            assert self.range_increment is not None
+            self.range_increment = (20, 60)
 
         self.__requires_two_hands = None
         self.__versatile = None
         self.requires_two_hands = bool(requires_two_hands)
         self.versatile = bool(versatile)
+        if self.damage and self.two_handed_damage:
+            self.versatile = True
         if self.versatile:
             assert self.two_handed_damage is not None
 

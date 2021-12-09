@@ -90,6 +90,9 @@ class DiceResult:
                    roll.die_max_value == other_roll.die_max_value
                    for roll, other_roll in zip(self.rolls, other.rolls))
 
+    def __iter__(self):
+        return iter(self.rolls)
+
     def __len__(self):
         return len(self.rolls)
 

@@ -31,6 +31,7 @@ def repr_test(obj):
         Optional[ArmorType]: ArmorType.MEDIUM,
         Optional[WeaponDamageType]: WeaponDamageType.SLASHING,
         Optional[typing.Tuple[int, int]]: (20, 60),
+        Optional[DiceResult]: roll_dice('5d8'),
         'Optional[str]': "a string",
         'int': 14,    # bonus: guaranteed random
         'str': "A Required String",
@@ -41,6 +42,7 @@ def repr_test(obj):
         'Optional[ArmorType]': ArmorType.MEDIUM,
         'Optional[WeaponDamageType]': WeaponDamageType.SLASHING,
         'Optional[Tuple[int, int]]': (20, 60),
+        'Optional[DiceResult]': roll_dice('14d8'),
     }
 
     init_kw = {}
