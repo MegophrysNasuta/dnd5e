@@ -9,9 +9,9 @@ class DieResult:
     Stores a max_die_value (e.g. 6 for a 6-sided die) and result, making them
     resistant to rewrites once set.
     """
-    def __init__(self, die_max_value: int, result: Optional[int]=None):
+    def __init__(self, die_max_value: int, result: Optional[int] = None):
         self.__die_max_value = int(die_max_value)
-        self.__result =  None
+        self.__result = None
         if result is not None:
             self.result = result
 
@@ -73,7 +73,8 @@ class DieResult:
     def __repr__(self):
         return 'DieResult(%s, result=%s)' % (self.die_max_value, self.result)
 
-DieResultSet = Union[Iterable[DieResult],Generator[DieResult, None, None]]
+
+DieResultSet = Union[Iterable[DieResult], Generator[DieResult, None, None]]
 
 
 class DiceResult:
@@ -127,8 +128,8 @@ class DiceResult:
 
 
 def roll_dice(mDn: str,
-              rerolling_if: Iterable[str]=None,
-              dropping_lowest: bool=False) -> DiceResult:
+              rerolling_if: Iterable[str] = None,
+              dropping_lowest: bool = False) -> DiceResult:
     """
     Syntactic sugar for roll with other functions as options.
 
@@ -193,7 +194,7 @@ def parse_condition(condition: str) -> Tuple[Callable[[int, int], bool], int]:
     }
 
     opposite_op = {'<': '>', '<=': '>=', '==': '==',
-                   '>': '<', '>=': '<=', '!=': '!=',}
+                   '>': '<', '>=': '<=', '!=': '!='}
 
     try:
         if matches[1] == 'x':
@@ -212,7 +213,8 @@ def reroll_if(rolls: DieResultSet,
         conditions = (conditions,)
 
     for roll in rolls:
-        if any(op(roll.result, val) for op, val in map(parse_condition, conditions)):
+        if any(op(roll.result, val) for op, val in map(parse_condition,
+                                                       conditions)):
             yield roll.reroll()
         else:
             yield roll

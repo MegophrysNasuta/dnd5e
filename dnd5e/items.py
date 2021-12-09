@@ -13,13 +13,14 @@ class ArmorType(enum.Enum):
 
 class Armor:
     def __init__(self, name: str, armor_class: int,
-                 armor_type: Optional[ArmorType]=None,
-                 min_str_requirement: Optional[int]=None,
-                 disadvantages_stealth: bool=False):
+                 armor_type: Optional[ArmorType] = None,
+                 min_str_requirement: Optional[int] = None,
+                 disadvantages_stealth: bool = False):
         self.name = str(name)
         self.armor_class = int(armor_class)
         self.armor_type = armor_type
-        self.min_str_requirement = min_str_requirement and int(min_str_requirement)
+        self.min_str_requirement = (min_str_requirement and
+                                    int(min_str_requirement))
         self.disadvantages_stealth = bool(disadvantages_stealth)
         if self.armor_type == ArmorType.HEAVY:
             self.disadvantages_stealth = True
@@ -59,6 +60,14 @@ class Armor:
 RangeIncrement = Tuple[int, int]
 
 
+class WeaponType(enum.Enum):
+    SIMPLE = enum.auto()
+    MARTIAL = enum.auto()
+
+    def __repr__(self):
+        return '%s.%s' % (self.__class__.__name__, self.name)
+
+
 class WeaponDamageType(enum.Enum):
     PIERCING = 'P'
     SLASHING = 'S'
@@ -69,15 +78,15 @@ class WeaponDamageType(enum.Enum):
 
 
 class Weapon:
-    def __init__(self, name: str, damage: Optional[str]=None,
-                 two_handed_damage: Optional[str]=None,
-                 damage_type: Optional[WeaponDamageType]=None,
-                 range_increment: Optional[RangeIncrement]=None,
-                 requires_ammo: bool=False, finesse_weapon: bool=False,
-                 is_heavy: bool=False, is_light: bool=False,
-                 slow_loading: bool=False, has_reach: bool=False,
-                 can_be_thrown: bool=False, requires_two_hands: bool=False,
-                 versatile: bool=False):
+    def __init__(self, name: str, damage: Optional[str] = None,
+                 two_handed_damage: Optional[str] = None,
+                 damage_type: Optional[WeaponDamageType] = None,
+                 range_increment: Optional[RangeIncrement] = None,
+                 requires_ammo: bool = False, finesse_weapon: bool = False,
+                 is_heavy: bool = False, is_light: bool = False,
+                 slow_loading: bool = False, has_reach: bool = False,
+                 can_be_thrown: bool = False, requires_two_hands: bool = False,
+                 versatile: bool = False):
         self.name = str(name)
         self.damage = damage and str(damage)
         self.two_handed_damage = two_handed_damage and str(two_handed_damage)
@@ -198,15 +207,15 @@ class Weapon:
 
     def __repr__(self):
         return ('Weapon("%s", %r, two_handed_damage=%r, '
-                'damage_type=%r, range_increment=%r, '
-                'requires_ammo=%r, finesse_weapon=%r, is_heavy=%r, is_light=%r, '
+                'damage_type=%r, range_increment=%r, is_light=%r, '
+                'requires_ammo=%r, finesse_weapon=%r, is_heavy=%r, '
                 'slow_loading=%r, has_reach=%r, can_be_thrown=%r, '
                 'requires_two_hands=%r, versatile=%r)') % (
                 self.name, self.damage, self.two_handed_damage,
-                self.damage_type, self.range_increment,
+                self.damage_type, self.range_increment, self.is_light,
                 self.requires_ammo, self.finesse_weapon, self.is_heavy,
-                self.is_light, self.slow_loading, self.has_reach,
-                self.can_be_thrown, self.requires_two_hands, self.versatile,
+                self.slow_loading, self.has_reach, self.can_be_thrown,
+                self.requires_two_hands, self.versatile,
                )
 
     def __str__(self):

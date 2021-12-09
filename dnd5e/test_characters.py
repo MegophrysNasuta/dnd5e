@@ -1,7 +1,7 @@
-import pytest
 from . import roll_dice
 from .characters import Character, CharacterStat, HitType
-from .items import Armor, Weapon, WeaponDamageType
+from .items import Armor, WeaponType
+from .weapons import longsword, spear
 
 
 def test_armor_class():
@@ -88,12 +88,11 @@ def test_character_stats():
 
 def test_swing_weapon():
     char = Character('Test', str_score=16, dex_score=17, dex_bonus=1,
-                     hit_dice=roll_dice('5d8'), level=5)
-    shortsword = Weapon('Shortsword', '1d6', finesse_weapon=True, is_light=True,
-                        damage_type=WeaponDamageType.PIERCING)
+                     hit_dice=roll_dice('5d8'), level=5,
+                     proficiencies=(WeaponType.SIMPLE,))
     assert char.wielding == (None, None)
-    char.wield_main(shortsword)
-    assert char.wielding == (shortsword, None)
+    char.wield_main(spear)
+    assert char.wielding == (spear, None)
 
     dummy = Character('Dummy', base_armor_class=0, str_score=10)
     assert dummy.AC == 0
@@ -102,13 +101,12 @@ def test_swing_weapon():
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
+    assert char.is_proficient_with(spear)
     assert ar.proficiency_bonus == char.proficiency_bonus
-    assert ar.modifier == char.DEX.modifier
+    assert ar.modifier == char.STR.modifier
     assert ar.damage_roll.die_max_value == 6
-    assert char.DEX.modifier < ar.damage <= char.DEX.modifier + 6
+    assert char.STR.modifier < ar.damage <= char.STR.modifier + 6
 
-    longsword = Weapon('Longsword', '1d8', '1d10', versatile=True,
-                       damage_type=WeaponDamageType.SLASHING)
     char.wield_main(longsword)
     assert char.wielding == (longsword, None)
 
@@ -116,7 +114,7 @@ def test_swing_weapon():
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
-    assert ar.proficiency_bonus == char.proficiency_bonus
+    assert ar.proficiency_bonus == 0
     assert ar.modifier == char.STR.modifier
     assert ar.damage_roll.die_max_value == 8
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 8
@@ -125,7 +123,7 @@ def test_swing_weapon():
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
-    assert ar.proficiency_bonus == char.proficiency_bonus
+    assert ar.proficiency_bonus == 0
     assert ar.modifier == char.STR.modifier
     assert ar.damage_roll.die_max_value == 10
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 10
@@ -135,7 +133,7 @@ def test_swing_weapon():
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
-    assert ar.proficiency_bonus == char.proficiency_bonus
+    assert ar.proficiency_bonus == 0
     assert ar.modifier == char.STR.modifier
     assert ar.damage_roll.die_max_value == 4
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 4

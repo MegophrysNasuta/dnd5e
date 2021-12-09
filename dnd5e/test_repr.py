@@ -1,10 +1,10 @@
 import inspect
 import typing
-from typing import Optional
+from typing import Iterable, Optional
 
-from .characters import Character, CharacterStat
+from .characters import Character, CharacterStat, Proficiency
 from .dicerolls import DieResult, DiceResult, roll_dice
-from .items import Armor, ArmorType, Weapon, WeaponDamageType
+from .items import Armor, ArmorType, Weapon, WeaponDamageType, WeaponType
 
 
 def repr_test(obj):
@@ -32,6 +32,7 @@ def repr_test(obj):
         Optional[WeaponDamageType]: WeaponDamageType.SLASHING,
         Optional[typing.Tuple[int, int]]: (20, 60),
         Optional[DiceResult]: roll_dice('5d8'),
+        Optional[Iterable[Proficiency]]: [WeaponType.SIMPLE],
         'Optional[str]': "a string",
         'int': 14,    # bonus: guaranteed random
         'str': "A Required String",
@@ -43,6 +44,7 @@ def repr_test(obj):
         'Optional[WeaponDamageType]': WeaponDamageType.SLASHING,
         'Optional[Tuple[int, int]]': (20, 60),
         'Optional[DiceResult]': roll_dice('14d8'),
+        'Optional[Iterable[Proficiency]]': [WeaponType.SIMPLE],
     }
 
     init_kw = {}
@@ -84,11 +86,14 @@ def repr_test(obj):
 def test_character_repr():
     repr_test(Character)
 
+
 def test_characterstat_repr():
     repr_test(CharacterStat)
 
+
 def test_dieresult_repr():
     repr_test(DieResult)
+
 
 def test_diceresult_repr():
     dice_result = roll_dice('4d6')
@@ -97,8 +102,10 @@ def test_diceresult_repr():
     new_dice_result = eval(repr(dice_result))
     assert new_dice_result == dice_result
 
+
 def test_armor_repr():
     repr_test(Armor)
+
 
 def test_weapon_repr():
     repr_test(Weapon)

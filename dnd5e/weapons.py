@@ -35,17 +35,18 @@ sling = SimpleWeapon('Sling', '1d4', None, B, requires_ammo=True,
 # Martial Melee
 battleaxe = MartialWeapon('Battleaxe', '1d8', '1d10', S, versatile=True)
 flail = MartialWeapon('Flail', '1d8', None, B)
-glaive = MartialWeapon('Glaive', '1d10', None, S, is_heavy=True, has_reach=True,
-                       requires_two_hands=True)
+glaive = MartialWeapon('Glaive', '1d10', None, S, is_heavy=True,
+                       has_reach=True, requires_two_hands=True)
 greataxe = MartialWeapon('Greataxe', '1d12', None, S, is_heavy=True,
                          requires_two_hands=True)
 greatsword = MartialWeapon('Greatsword', '2d6', None, S, is_heavy=True,
                            requires_two_hands=True)
-halberd = MartialWeapon('Halberd', '1d10', None, S, is_heavy=True, has_reach=True,
-                        requires_two_hands=True)
+halberd = MartialWeapon('Halberd', '1d10', None, S, is_heavy=True,
+                        has_reach=True, requires_two_hands=True)
 lance = MartialWeapon('Lance', '1d12', None, P, has_reach=True)
 longsword = MartialWeapon('Longsword', '1d8', '1d10', S, versatile=True)
-maul = MartialWeapon('Maul', '2d6', None, B, is_heavy=True, requires_two_hands=True)
+maul = MartialWeapon('Maul', '2d6', None, B, is_heavy=True,
+                     requires_two_hands=True)
 morningstar = MartialWeapon('Morningstar', '1d8', None, P)
 pike = MartialWeapon('Pike', '1d10', None, P, is_heavy=True, has_reach=True,
                      requires_two_hands=True)
@@ -58,7 +59,8 @@ trident = MartialWeapon('Trident', '1d6', '1d8', P, can_be_thrown=True,
                         versatile=True)
 war_pick = MartialWeapon('War pick', '1d8', None, P)
 warhammer = MartialWeapon('Warhammer', '1d8', '1d10', B, versatile=True)
-whip = MartialWeapon('Whip', '1d4', None, P, finesse_weapon=True, has_reach=True)
+whip = MartialWeapon('Whip', '1d4', None, P, finesse_weapon=True,
+                     has_reach=True)
 
 # Martial Ranged
 blowgun = MartialWeapon('Blowgun', '1d1', None, P, requires_ammo=True,
@@ -66,8 +68,9 @@ blowgun = MartialWeapon('Blowgun', '1d1', None, P, requires_ammo=True,
 hand_xbow = MartialWeapon('Hand crossbow', '1d6', None, P, requires_ammo=True,
                           slow_loading=True, is_light=True,
                           range_increment=(30, 120))
-heavy_xbow = MartialWeapon('Heavy crossbow', '1d10', None, P, requires_ammo=True,
+heavy_xbow = MartialWeapon('Heavy crossbow', '1d10', None, P,
                            is_heavy=True, slow_loading=True,
+                           requires_ammo=True,
                            requires_two_hands=True, range_increment=(100, 400))
 longbow = MartialWeapon('Longbow', '1d8', None, P, requires_ammo=True,
                         requires_two_hands=True, range_increment=(150, 600),

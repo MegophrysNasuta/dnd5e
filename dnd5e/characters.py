@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import enum
-from typing import Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 from .dicerolls import roll, DieResult, DiceResult
-from .items import Armor, ArmorType, Weapon, SimpleWeapon, MartialWeapon
+from .items import (Armor, ArmorType, SimpleWeapon, MartialWeapon,
+                    Weapon, WeaponType)
 
 
 class HitType(enum.Enum):
@@ -13,11 +14,12 @@ class HitType(enum.Enum):
 
 
 class AttackResult:
-    def __init__(self, hit_type: Optional[HitType]=None, damage: int=0,
-                 attack_roll: Optional[DieResult]=None, modifier: int=0,
-                 proficiency_bonus: int=0, target: Optional[Character]=None,
-                 damage_roll: Optional[DieResult]=None,
-                 attack_with: Optional[Weapon]=None):
+    def __init__(self, hit_type: Optional[HitType] = None, damage: int = 0,
+                 attack_roll: Optional[DieResult] = None, modifier: int = 0,
+                 proficiency_bonus: int = 0,
+                 target: Optional[Character] = None,
+                 damage_roll: Optional[DieResult] = None,
+                 attack_with: Optional[Weapon] = None):
         self.hit_type = hit_type
         self.damage = int(damage)
         self.attack_roll = attack_roll
@@ -41,9 +43,11 @@ class AttackResult:
         if self.hit_type == HitType.SHIELD_GLANCE:
             desc = attack_type + ' glances off %s\'s shield.' % target
         elif self.hit_type == HitType.ARMOR_GLANCE:
-            desc = attack_type + ' bounces harmlessly off %s\'s armor.' % target
+            desc = attack_type + (' bounces harmlessly off %s\'s '
+                                  'armor.' % target)
         elif self.hit_type == HitType.FULL:
-            desc = attack_type + ' hits %s for %i damage!' % (target, self.damage)
+            desc = attack_type + ' hits %s for %i damage!' % (target,
+                                                              self.damage)
         else:
             desc = attack_type + ' missed %s.' % target
 
@@ -54,8 +58,8 @@ class AttackResult:
 
 
 class CharacterStat:
-    def __init__(self, full_name: str, base_value: Optional[int]=None,
-                 bonus: Optional[int]=None):
+    def __init__(self, full_name: str, base_value: Optional[int] = None,
+                 bonus: Optional[int] = None):
         self.__fullname = str(full_name)
         self.base_value = base_value and int(base_value) or 10
         self.bonus = bonus and int(bonus) or 0
@@ -93,36 +97,38 @@ class CharacterStat:
         return str_rep_line % (self.full_name, self.abbr, self.value,
                                self.modifier, self.bonus)
 
+
 CharacterStats = Tuple[Optional[CharacterStat], Optional[CharacterStat],
                        Optional[CharacterStat], Optional[CharacterStat],
                        Optional[CharacterStat], Optional[CharacterStat]]
 
 
-Proficiency = Union[ArmorType, SimpleWeapon, MartialWeapon, CharacterStat]
+Proficiency = Union[ArmorType, WeaponType, CharacterStat]
 
 
 class Character:
-    def __init__(self, name: Optional[str]=None,
-                 race: Optional[str]=None,
-                 class_: Optional[str]=None,
-                 base_armor_class: int=10,
-                 armor: Optional[Armor]=None,
-                 uses_shield: bool=False,
-                 include_stats_in_AC: Tuple[str, ...]=(),
-                 level: int=1, hit_dice: Optional[DiceResult]=None,
-                 wounds: int=0,
-                 str_bonus: Optional[int]=None,
-                 str_score: Optional[int]=None,
-                 dex_bonus: Optional[int]=None,
-                 dex_score: Optional[int]=None,
-                 con_bonus: Optional[int]=None,
-                 con_score: Optional[int]=None,
-                 int_bonus: Optional[int]=None,
-                 int_score: Optional[int]=None,
-                 wis_bonus: Optional[int]=None,
-                 wis_score: Optional[int]=None,
-                 cha_bonus: Optional[int]=None,
-                 cha_score: Optional[int]=None):
+    def __init__(self, name: Optional[str] = None,
+                 race: Optional[str] = None,
+                 class_: Optional[str] = None,
+                 base_armor_class: int = 10,
+                 armor: Optional[Armor] = None,
+                 uses_shield: bool = False,
+                 include_stats_in_AC: Tuple[str, ...] = (),
+                 level: int = 1, hit_dice: Optional[DiceResult] = None,
+                 wounds: int = 0,
+                 proficiencies: Optional[Iterable[Proficiency]] = None,
+                 str_bonus: Optional[int] = None,
+                 str_score: Optional[int] = None,
+                 dex_bonus: Optional[int] = None,
+                 dex_score: Optional[int] = None,
+                 con_bonus: Optional[int] = None,
+                 con_score: Optional[int] = None,
+                 int_bonus: Optional[int] = None,
+                 int_score: Optional[int] = None,
+                 wis_bonus: Optional[int] = None,
+                 wis_score: Optional[int] = None,
+                 cha_bonus: Optional[int] = None,
+                 cha_score: Optional[int] = None):
         self.name = name
         self.race = race
         self.class_ = class_
@@ -143,14 +149,16 @@ class Character:
         self.CHA = CharacterStat('Charisma', cha_score, cha_bonus)
         self.__main_hand: Optional[Weapon] = None
         self.__off_hand: Optional[Weapon] = None
+        self.proficiencies: List[Proficiency] = list(proficiencies or ())
 
     @property
     def AC(self) -> int:
         ac = self.base_armor_class
 
         if self.armor:
+            max_dex_modifier = self.armor.max_dex_modifier or 99
             ac = self.armor.armor_class + min(self.DEX.modifier or 0,
-                                              self.armor.max_dex_modifier or 99)
+                                              max_dex_modifier)
         else:
             ac += self.DEX.modifier or 0
 
@@ -166,8 +174,9 @@ class Character:
 
         return ac
 
-    def attack(self, other: Character, main_hand: bool=True,
-               using_two_hands: bool=False, distance: int=5) -> AttackResult:
+    def attack(self, other: Character, main_hand: bool = True,
+               using_two_hands: bool = False,
+               distance: int = 5) -> AttackResult:
         if not isinstance(other, Character):
             raise ValueError("Unsure how to attack a(n) "
                              "%s." % other.__class__.__name__)
@@ -208,12 +217,16 @@ class Character:
             else:
                 modifier = self.STR.modifier
 
+        proficiency_bonus = 0
+        if weapon and self.is_proficient_with(weapon):
+            proficiency_bonus = self.proficiency_bonus
+
         attack_roll = tuple(roll('1d20'))[0]
-        attack_roll += modifier + self.proficiency_bonus
+        attack_roll += modifier + proficiency_bonus
         result = AttackResult(
             attack_roll=attack_roll,
             modifier=modifier,
-            proficiency_bonus=self.proficiency_bonus,
+            proficiency_bonus=proficiency_bonus,
             target=other,
             attack_with=weapon,
         )
@@ -221,7 +234,7 @@ class Character:
             damage_roll = tuple(roll(damage))[0]
             result.damage_roll = damage_roll
             result.hit_type = HitType.FULL
-            result.damage = damage_roll + modifier
+            result.damage = max(damage_roll + modifier, 1)
             other.wounds += result.damage
         elif other.uses_shield and attack_roll > (other.AC - 2):
             result.hit_type = HitType.SHIELD_GLANCE
@@ -232,6 +245,16 @@ class Character:
             self.wield_main(None)
 
         return result
+
+    def is_proficient_with(self, thing: Weapon | Armor):
+        if isinstance(thing, SimpleWeapon):
+            return WeaponType.SIMPLE in self.proficiencies
+        elif isinstance(thing, MartialWeapon):
+            return WeaponType.MARTIAL in self.proficiencies
+        elif isinstance(thing, Armor):
+            return thing.armor_type in self.proficiencies
+        else:
+            return False
 
     @property
     def hp(self) -> int:
@@ -293,7 +316,7 @@ class Character:
         return ('Character("%s", race="%s", class_="%s", '
                 'base_armor_class=%r, armor=%r, level=%r, '
                 'uses_shield=%r, include_stats_in_AC=%r, '
-                'hit_dice=%r, wounds=%r, '
+                'hit_dice=%r, wounds=%r, proficiencies=%r, '
                 'str_bonus=%r, str_score=%r, '
                 'dex_bonus=%r, dex_score=%r, '
                 'con_bonus=%r, con_score=%r, '
@@ -303,7 +326,7 @@ class Character:
                 self.name, self.race, self.class_,
                 self.base_armor_class, self.armor, self.level,
                 self.uses_shield, self.include_stats_in_AC,
-                self.hit_dice, self.wounds,
+                self.hit_dice, self.wounds, self.proficiencies,
                 self.STR.bonus, self.STR.base_value,
                 self.DEX.bonus, self.DEX.base_value,
                 self.CON.bonus, self.CON.base_value,
