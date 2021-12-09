@@ -1,8 +1,8 @@
 import operator
 import pytest
 
-from dnd5e_functools import roll, reroll_if
-from dnd5e_functools.dicerolls import parse_condition
+from . import roll, reroll_if
+from .dicerolls import parse_condition
 
 
 def test_roll():

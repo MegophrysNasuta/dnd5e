@@ -1,4 +1,5 @@
 import pytest
+from . import roll_dice
 from .characters import Character, CharacterStat, HitType
 from .items import Armor, Weapon, WeaponDamageType
 
@@ -86,7 +87,8 @@ def test_character_stats():
 
 
 def test_swing_weapon():
-    char = Character('Test', str_score=16, dex_score=17, dex_bonus=1)
+    char = Character('Test', str_score=16, dex_score=17, dex_bonus=1,
+                     hit_dice=roll_dice('5d8'), level=5)
     shortsword = Weapon('Shortsword', '1d6', finesse_weapon=True, is_light=True,
                         damage_type=WeaponDamageType.PIERCING)
     assert char.wielding == (None, None)

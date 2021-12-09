@@ -15,14 +15,42 @@ class HitType(enum.Enum):
 class AttackResult:
     def __init__(self, hit_type: Optional[HitType]=None, damage: int=0,
                  attack_roll: Optional[DieResult]=None, modifier: int=0,
-                 proficiency_bonus: int=0,
-                 damage_roll: Optional[DieResult]=None):
+                 proficiency_bonus: int=0, target: Optional[Character]=None,
+                 damage_roll: Optional[DieResult]=None,
+                 attack_with: Optional[Weapon]=None):
         self.hit_type = hit_type
         self.damage = int(damage)
         self.attack_roll = attack_roll
         self.damage_roll = damage_roll
         self.modifier = int(modifier)
         self.proficiency_bonus = int(proficiency_bonus)
+        self.target = target
+        self.attack_with = attack_with
+
+    def describe(self):
+        if self.attack_with is None:
+            attack_type = 'The attack'
+        else:
+            attack_type = 'The attack with %s' % self.attack_with.name
+
+        if self.target is None:
+            target = 'target'
+        else:
+            target = self.target.name
+
+        if self.hit_type == HitType.SHIELD_GLANCE:
+            desc = attack_type + ' glances off %s\'s shield.' % target
+        elif self.hit_type == HitType.ARMOR_GLANCE:
+            desc = attack_type + ' bounces harmlessly off %s\'s armor.' % target
+        elif self.hit_type == HitType.FULL:
+            desc = attack_type + ' hits %s for %i damage!' % (target, self.damage)
+        else:
+            desc = attack_type + ' missed %s.' % target
+
+        if self.target:
+            desc += '\n%s is now %s.' % (target, self.target.hp_status)
+
+        print(desc)
 
 
 class CharacterStat:
@@ -136,15 +164,21 @@ class Character:
         return ac
 
     def attack(self, other: Character, main_hand: bool=True,
-               using_two_hands: bool=False, ranged: bool=False) -> AttackResult:
+               using_two_hands: bool=False, distance: int=5) -> AttackResult:
         if not isinstance(other, Character):
             raise ValueError("Unsure how to attack a(n) "
                              "%s." % other.__class__.__name__)
 
+        if self.hp < 1:
+            raise RuntimeError("%s is dead and can't attack." % self.name)
+
         damage = None
         weapon = None
         if using_two_hands and self.wielding[0] is not None:
-            damage = self.wielding[0].two_handed_damage
+            if self.wielding[0].versatile:
+                damage = self.wielding[0].two_handed_damage
+            else:
+                damage = self.wielding[0].damage
             weapon = self.wielding[0]
         elif main_hand and self.wielding[0] is not None:
             damage = self.wielding[0].damage
@@ -155,6 +189,13 @@ class Character:
 
         if damage is None:
             damage = '1d4'
+
+        threshold = 5 if not (weapon and weapon.has_reach) else 10
+        ranged = distance > threshold
+        if not (weapon and weapon.has_range) and ranged:
+            weapon_name = weapon and weapon.name or 'unarmed strike'
+            raise RuntimeError("Cannot attack with %s at range "
+                               "%i." % (weapon_name, distance))
 
         if ranged:
             modifier = self.DEX.modifier
@@ -170,6 +211,8 @@ class Character:
             attack_roll=attack_roll,
             modifier=modifier,
             proficiency_bonus=self.proficiency_bonus,
+            target=other,
+            attack_with=weapon,
         )
         if attack_roll > other.AC:
             damage_roll = tuple(roll(damage))[0]
@@ -182,6 +225,9 @@ class Character:
         elif attack_roll > 10:
             result.hit_type = HitType.ARMOR_GLANCE
 
+        if ranged and weapon.can_be_thrown:
+            self.wield_main(None)
+
         return result
 
     @property
@@ -192,7 +238,7 @@ class Character:
     def hp_percent(self) -> float:
         if self.maxhp == 0:
             return 0.
-        return self.hp / self.maxhp
+        return (self.hp / self.maxhp) * 100
 
     @property
     def hp_status(self) -> str:
