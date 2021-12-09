@@ -72,7 +72,6 @@ class Weapon:
     def __init__(self, name: str, damage: Optional[str]=None,
                  two_handed_damage: Optional[str]=None,
                  damage_type: Optional[WeaponDamageType]=None,
-                 is_simple: bool=False,
                  range_increment: Optional[RangeIncrement]=None,
                  requires_ammo: bool=False, finesse_weapon: bool=False,
                  is_heavy: bool=False, is_light: bool=False,
@@ -83,7 +82,6 @@ class Weapon:
         self.damage = damage and str(damage)
         self.two_handed_damage = two_handed_damage and str(two_handed_damage)
         self.damage_type = damage_type
-        self.is_simple = bool(is_simple)
         self.range_increment = range_increment and tuple(map(int,
                                                              range_increment))
         self.__requires_ammo = None
@@ -174,13 +172,6 @@ class Weapon:
             self.__requires_two_hands = False
 
     @property
-    def type_(self) -> str:
-        if self.has_range:
-            return 'Simple Ranged' if self.is_simple else 'Martial Ranged'
-        else:
-            return 'Simple Melee' if self.is_simple else 'Martial Melee'
-
-    @property
     def properties(self) -> List[str]:
         prop_list = []
         if self.requires_ammo:
@@ -207,23 +198,31 @@ class Weapon:
 
     def __repr__(self):
         return ('Weapon("%s", %r, two_handed_damage=%r, '
-                'damage_type=%r, is_simple=%r, range_increment=%r, '
+                'damage_type=%r, range_increment=%r, '
                 'requires_ammo=%r, finesse_weapon=%r, is_heavy=%r, is_light=%r, '
                 'slow_loading=%r, has_reach=%r, can_be_thrown=%r, '
                 'requires_two_hands=%r, versatile=%r)') % (
                 self.name, self.damage, self.two_handed_damage,
-                self.damage_type, self.is_simple, self.range_increment,
+                self.damage_type, self.range_increment,
                 self.requires_ammo, self.finesse_weapon, self.is_heavy,
                 self.is_light, self.slow_loading, self.has_reach,
                 self.can_be_thrown, self.requires_two_hands, self.versatile,
                )
 
     def __str__(self):
-        str_rep = ['<Weapon: %s, %s']
-        str_rep_contents = [self.name, self.type_]
+        str_rep = ['<%s: %s']
+        str_rep_contents = [self.__class__.__name__, self.name]
         if self.has_range:
             str_rep.append(' %s')
             str_rep_contents.append(self.range_increment)
         str_rep.append(' %s (%s)>')
         str_rep_contents.extend([self.damage, self.damage_type.value])
         return ''.join(str_rep) % tuple(str_rep_contents)
+
+
+class SimpleWeapon(Weapon):
+    pass
+
+
+class MartialWeapon(Weapon):
+    pass

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import enum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from .dicerolls import roll, DieResult, DiceResult
-from .items import Armor, Weapon
+from .items import Armor, ArmorType, Weapon, SimpleWeapon, MartialWeapon
 
 
 class HitType(enum.Enum):
@@ -96,6 +96,9 @@ class CharacterStat:
 CharacterStats = Tuple[Optional[CharacterStat], Optional[CharacterStat],
                        Optional[CharacterStat], Optional[CharacterStat],
                        Optional[CharacterStat], Optional[CharacterStat]]
+
+
+Proficiency = Union[ArmorType, SimpleWeapon, MartialWeapon, CharacterStat]
 
 
 class Character:
@@ -225,7 +228,7 @@ class Character:
         elif attack_roll > 10:
             result.hit_type = HitType.ARMOR_GLANCE
 
-        if ranged and weapon.can_be_thrown:
+        if ranged and weapon is not None and weapon.can_be_thrown:
             self.wield_main(None)
 
         return result
