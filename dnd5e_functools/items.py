@@ -14,15 +14,24 @@ class ArmorType(enum.Enum):
 class Armor:
     def __init__(self, name: str, armor_class: int,
                  armor_type: Optional[ArmorType]=None,
-                 max_dex_modifier: Optional[int]=None,
                  min_str_requirement: Optional[int]=None,
                  disadvantages_stealth: bool=False):
         self.name = str(name)
         self.armor_class = int(armor_class)
         self.armor_type = armor_type
-        self.max_dex_modifier = max_dex_modifier and int(max_dex_modifier)
         self.min_str_requirement = min_str_requirement and int(min_str_requirement)
         self.disadvantages_stealth = bool(disadvantages_stealth)
+        if self.armor_type == ArmorType.HEAVY:
+            self.disadvantages_stealth = True
+
+    @property
+    def max_dex_modifier(self) -> Optional[int]:
+        if self.armor_type == ArmorType.LIGHT:
+            return None
+        elif self.armor_type == ArmorType.MEDIUM:
+            return 2
+        else:
+            return 0
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
@@ -32,17 +41,15 @@ class Armor:
             self.name == other.name and
             self.armor_class == other.armor_class and
             self.armor_type == other.armor_type and
-            self.max_dex_modifier == other.max_dex_modifier and
             self.min_str_requirement == other.min_str_requirement and
             self.disadvantages_stealth == other.disadvantages_stealth
         )
 
     def __repr__(self):
-        return ('Armor(%r, %r, armor_type=%r, max_dex_modifier=%r, '
+        return ('Armor(%r, %r, armor_type=%r, '
                 'min_str_requirement=%r, disadvantages_stealth=%r)') % (
                 self.name, self.armor_class, self.armor_type,
-                self.max_dex_modifier, self.min_str_requirement,
-                self.disadvantages_stealth)
+                self.min_str_requirement, self.disadvantages_stealth)
 
     def __str__(self):
         return '<%sArmor: %s (AC %i)>' % (self.armor_type.name.title(),
