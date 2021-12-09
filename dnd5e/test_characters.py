@@ -133,7 +133,7 @@ def test_swing_weapon():
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
-    assert ar.proficiency_bonus == 0
+    assert ar.proficiency_bonus == char.proficiency_bonus
     assert ar.modifier == char.STR.modifier
-    assert ar.damage_roll.die_max_value == 4
-    assert char.STR.modifier < ar.damage <= char.STR.modifier + 4
+    assert ar.damage_roll.die_max_value == 1
+    assert ar.damage == 1 + char.STR.modifier

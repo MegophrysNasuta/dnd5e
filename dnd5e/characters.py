@@ -176,10 +176,15 @@ class Character:
 
     def attack(self, other: Character, main_hand: bool = True,
                using_two_hands: bool = False,
+               with_advantage: bool = False,
+               with_disadvantage: bool = False,
                distance: int = 5) -> AttackResult:
         if not isinstance(other, Character):
             raise ValueError("Unsure how to attack a(n) "
                              "%s." % other.__class__.__name__)
+
+        if with_advantage and with_disadvantage:
+            with_advantage = with_disadvantage = False
 
         if self.hp < 1:
             raise RuntimeError("%s is dead and can't attack." % self.name)
@@ -200,7 +205,7 @@ class Character:
             weapon = self.wielding[1]
 
         if damage is None:
-            damage = '1d4'
+            damage = '1d1'
 
         threshold = 5 if not (weapon and weapon.has_reach) else 10
         ranged = distance > threshold
@@ -218,10 +223,15 @@ class Character:
                 modifier = self.STR.modifier
 
         proficiency_bonus = 0
-        if weapon and self.is_proficient_with(weapon):
+        if weapon is None or self.is_proficient_with(weapon):
             proficiency_bonus = self.proficiency_bonus
 
         attack_roll = tuple(roll('1d20'))[0]
+        if with_advantage or with_disadvantage:
+            attack_reroll = tuple(roll('1d20'))[0]
+            if ((with_advantage and attack_reroll > attack_roll) or
+                    (with_disadvantage and attack_reroll < attack_roll)):
+                attack_roll = attack_reroll
         attack_roll += modifier + proficiency_bonus
         result = AttackResult(
             attack_roll=attack_roll,
@@ -234,7 +244,11 @@ class Character:
             damage_roll = tuple(roll(damage))[0]
             result.damage_roll = damage_roll
             result.hit_type = HitType.FULL
-            result.damage = max(damage_roll + modifier, 1)
+            if main_hand:
+                damage_modifier = modifier
+            else:
+                damage_modifier = min(modifier, 0)
+            result.damage = max(damage_roll + damage_modifier, 1)
             other.wounds += result.damage
         elif other.uses_shield and attack_roll > (other.AC - 2):
             result.hit_type = HitType.SHIELD_GLANCE
@@ -242,7 +256,10 @@ class Character:
             result.hit_type = HitType.ARMOR_GLANCE
 
         if ranged and weapon is not None and weapon.can_be_thrown:
-            self.wield_main(None)
+            if main_hand:
+                self.wield_main(None)
+            else:
+                self.wield_off(None)
 
         return result
 
