@@ -16,18 +16,23 @@ class HitType(enum.Enum):
 class AttackResult:
     def __init__(self, hit_type: Optional[HitType] = None, damage: int = 0,
                  attack_roll: Optional[DieResult] = None, modifier: int = 0,
-                 proficiency_bonus: int = 0,
+                 proficiency_bonus: int = 0, critical_hit: bool = False,
                  target: Optional[Character] = None,
                  damage_roll: Optional[DieResult] = None,
-                 attack_with: Optional[Weapon] = None):
+                 attack_with: Optional[Weapon] = None,
+                 with_advantage: bool = False,
+                 with_disadvantage: bool = False):
         self.hit_type = hit_type
         self.damage = int(damage)
         self.attack_roll = attack_roll
         self.damage_roll = damage_roll
         self.modifier = int(modifier)
         self.proficiency_bonus = int(proficiency_bonus)
+        self.critical_hit = bool(critical_hit)
         self.target = target
         self.attack_with = attack_with
+        self.with_advantage = bool(with_advantage)
+        self.with_disadvantage = bool(with_disadvantage)
 
     def describe(self):
         if self.attack_with is None:
@@ -55,6 +60,7 @@ class AttackResult:
             desc += '\n%s is now %s.' % (target, self.target.hp_status)
 
         print(desc)
+        return self
 
 
 class CharacterStat:
@@ -115,7 +121,7 @@ class Character:
                  uses_shield: bool = False,
                  include_stats_in_AC: Tuple[str, ...] = (),
                  level: int = 1, hit_dice: Optional[DiceResult] = None,
-                 wounds: int = 0,
+                 wounds: int = 0, base_movement_speed: int = 30,
                  proficiencies: Optional[Iterable[Proficiency]] = None,
                  str_bonus: Optional[int] = None,
                  str_score: Optional[int] = None,
@@ -141,6 +147,7 @@ class Character:
         self.wounds = int(wounds)
         if self.hit_dice:
             assert len(self.hit_dice) == self.level
+        self.base_movement_speed = int(base_movement_speed)
         self.STR = CharacterStat('Strength', str_score, str_bonus)
         self.DEX = CharacterStat('Dexterity', dex_score, dex_bonus)
         self.CON = CharacterStat('Constitution', con_score, con_bonus)
@@ -182,6 +189,9 @@ class Character:
         if not isinstance(other, Character):
             raise ValueError("Unsure how to attack a(n) "
                              "%s." % other.__class__.__name__)
+
+        if self.armor and self.armor.armor_type not in self.proficiencies:
+            with_disadvantage = True
 
         if with_advantage and with_disadvantage:
             with_advantage = with_disadvantage = False
@@ -232,6 +242,10 @@ class Character:
             if ((with_advantage and attack_reroll > attack_roll) or
                     (with_disadvantage and attack_reroll < attack_roll)):
                 attack_roll = attack_reroll
+        critical_threshold = 20
+        critical_hit = False
+        if attack_roll >= critical_threshold:
+            critical_hit = True
         attack_roll += modifier + proficiency_bonus
         result = AttackResult(
             attack_roll=attack_roll,
@@ -239,8 +253,11 @@ class Character:
             proficiency_bonus=proficiency_bonus,
             target=other,
             attack_with=weapon,
+            with_advantage=with_advantage,
+            with_disadvantage=with_disadvantage,
+            critical_hit=critical_hit,
         )
-        if attack_roll > other.AC:
+        if attack_roll > other.AC or critical_hit:
             damage_roll = tuple(roll(damage))[0]
             result.damage_roll = damage_roll
             result.hit_type = HitType.FULL
@@ -309,6 +326,14 @@ class Character:
         return sum(self.hit_dice) + (self.CON.modifier * self.level)
 
     @property
+    def movement_speed(self) -> int:
+        if (self.armor and self.armor.min_str_requirement and
+                self.STR.value < self.armor.min_str_requirement):
+            return self.base_movement_speed - 10
+        else:
+            return self.base_movement_speed
+
+    @property
     def proficiency_bonus(self) -> int:
         return 2 + ((self.level - 1) // 4)
 
@@ -334,6 +359,7 @@ class Character:
                 'base_armor_class=%r, armor=%r, level=%r, '
                 'uses_shield=%r, include_stats_in_AC=%r, '
                 'hit_dice=%r, wounds=%r, proficiencies=%r, '
+                'base_movement_speed=%r, '
                 'str_bonus=%r, str_score=%r, '
                 'dex_bonus=%r, dex_score=%r, '
                 'con_bonus=%r, con_score=%r, '
@@ -344,6 +370,7 @@ class Character:
                 self.base_armor_class, self.armor, self.level,
                 self.uses_shield, self.include_stats_in_AC,
                 self.hit_dice, self.wounds, self.proficiencies,
+                self.base_movement_speed,
                 self.STR.bonus, self.STR.base_value,
                 self.DEX.bonus, self.DEX.base_value,
                 self.CON.bonus, self.CON.base_value,

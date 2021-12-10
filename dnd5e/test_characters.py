@@ -97,7 +97,7 @@ def test_swing_weapon():
     dummy = Character('Dummy', base_armor_class=0, str_score=10)
     assert dummy.AC == 0
 
-    ar = char.attack(dummy)
+    ar = char.attack(dummy).describe()
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
@@ -110,7 +110,7 @@ def test_swing_weapon():
     char.wield_main(longsword)
     assert char.wielding == (longsword, None)
 
-    ar = char.attack(dummy)
+    ar = char.attack(dummy).describe()
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
@@ -119,7 +119,7 @@ def test_swing_weapon():
     assert ar.damage_roll.die_max_value == 8
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 8
 
-    ar = char.attack(dummy, using_two_hands=True)
+    ar = char.attack(dummy, using_two_hands=True).describe()
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None
@@ -129,7 +129,7 @@ def test_swing_weapon():
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 10
 
     char.wield_main(None)
-    ar = char.attack(dummy)
+    ar = char.attack(dummy).describe()
     assert ar.hit_type == HitType.FULL
     assert ar.attack_roll is not None
     assert ar.damage_roll is not None

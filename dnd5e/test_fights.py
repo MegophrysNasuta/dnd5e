@@ -13,10 +13,7 @@ def test_hero_vs_kobold():
     assert hero.wielding == (None, None)
     hero.wield_main(spear)
     result = hero.attack(kobold, distance=10)
-    if result.hit_type:
-        assert kobold.hp_status == 'dead'
-    else:
-        assert kobold.hp_status == 'unscathed'
+    assert kobold.hp_status == ('dead' if result.hit_type else 'unscathed')
     assert hero.wielding == (None, None)
     kobold.wounds = 0   # they must have a priest
     assert kobold.hp_status == 'unscathed'
