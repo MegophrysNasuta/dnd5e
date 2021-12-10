@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import operator
 import random
 import re
@@ -91,6 +93,9 @@ class DiceResult:
                    roll.die_max_value == other_roll.die_max_value
                    for roll, other_roll in zip(self.rolls, other.rolls))
 
+    def __getitem__(self, index: int):
+        return self.rolls[index]
+
     def __iter__(self):
         return iter(self.rolls)
 
@@ -109,8 +114,11 @@ class DiceResult:
     def str_results(self):
         return map(str, self.int_results)
 
-    def __add__(self, value):
-        self.modifier = int(value)
+    def __add__(self, value: int | DiceResult) -> DiceResult:
+        if isinstance(value, DiceResult):
+            return DiceResult(*(list(self.rolls) + list(value.rolls)))
+        else:
+            self.modifier = int(value)
         return self
 
     def __sub__(self, value):

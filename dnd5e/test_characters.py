@@ -104,7 +104,7 @@ def test_swing_weapon():
     assert char.is_proficient_with(spear)
     assert ar.proficiency_bonus == char.proficiency_bonus
     assert ar.modifier == char.STR.modifier
-    assert ar.damage_roll.die_max_value == 6
+    assert ar.damage_roll[0].die_max_value == 6
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 6
 
     char.wield_main(longsword)
@@ -116,7 +116,7 @@ def test_swing_weapon():
     assert ar.damage_roll is not None
     assert ar.proficiency_bonus == 0
     assert ar.modifier == char.STR.modifier
-    assert ar.damage_roll.die_max_value == 8
+    assert ar.damage_roll[0].die_max_value == 8
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 8
 
     ar = char.attack(dummy, using_two_hands=True).describe()
@@ -125,7 +125,7 @@ def test_swing_weapon():
     assert ar.damage_roll is not None
     assert ar.proficiency_bonus == 0
     assert ar.modifier == char.STR.modifier
-    assert ar.damage_roll.die_max_value == 10
+    assert ar.damage_roll[0].die_max_value == 10
     assert char.STR.modifier < ar.damage <= char.STR.modifier + 10
 
     char.wield_main(None)
@@ -135,5 +135,5 @@ def test_swing_weapon():
     assert ar.damage_roll is not None
     assert ar.proficiency_bonus == char.proficiency_bonus
     assert ar.modifier == char.STR.modifier
-    assert ar.damage_roll.die_max_value == 1
+    assert ar.damage_roll[0].die_max_value == 1
     assert ar.damage == 1 + char.STR.modifier

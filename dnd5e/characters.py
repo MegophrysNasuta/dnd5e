@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 from typing import Iterable, List, Optional, Tuple, Union
-from .dicerolls import roll, DieResult, DiceResult
+from .dicerolls import roll_dice, DiceResult
 from .items import (Armor, ArmorType, SimpleWeapon, MartialWeapon,
                     Weapon, WeaponType)
 
@@ -15,10 +15,10 @@ class HitType(enum.Enum):
 
 class AttackResult:
     def __init__(self, hit_type: Optional[HitType] = None, damage: int = 0,
-                 attack_roll: Optional[DieResult] = None, modifier: int = 0,
+                 attack_roll: Optional[DiceResult] = None, modifier: int = 0,
                  proficiency_bonus: int = 0, critical_hit: bool = False,
                  target: Optional[Character] = None,
-                 damage_roll: Optional[DieResult] = None,
+                 damage_roll: Optional[DiceResult] = None,
                  attack_with: Optional[Weapon] = None,
                  with_advantage: bool = False,
                  with_disadvantage: bool = False):
@@ -236,15 +236,16 @@ class Character:
         if weapon is None or self.is_proficient_with(weapon):
             proficiency_bonus = self.proficiency_bonus
 
-        attack_roll = tuple(roll('1d20'))[0]
+        attack_roll = roll_dice('1d20')
         if with_advantage or with_disadvantage:
-            attack_reroll = tuple(roll('1d20'))[0]
-            if ((with_advantage and attack_reroll > attack_roll) or
-                    (with_disadvantage and attack_reroll < attack_roll)):
+            attack_reroll = roll_dice('1d20')
+            if ((with_advantage and attack_reroll.total > attack_roll.total) or
+                    (with_disadvantage and
+                     attack_reroll.total < attack_roll.total)):
                 attack_roll = attack_reroll
         critical_threshold = 20
         critical_hit = False
-        if attack_roll >= critical_threshold:
+        if attack_roll.total >= critical_threshold:
             critical_hit = True
         attack_roll += modifier + proficiency_bonus
         result = AttackResult(
@@ -257,20 +258,25 @@ class Character:
             with_disadvantage=with_disadvantage,
             critical_hit=critical_hit,
         )
-        if attack_roll > other.AC or critical_hit:
-            damage_roll = tuple(roll(damage))[0]
+        if attack_roll.total > other.AC or critical_hit:
+            if critical_hit:
+                damage_roll = roll_dice(damage) + roll_dice(damage)
+            else:
+                damage_roll = roll_dice(damage)
             result.damage_roll = damage_roll
             result.hit_type = HitType.FULL
             if main_hand:
                 damage_modifier = modifier
             else:
                 damage_modifier = min(modifier, 0)
-            result.damage = max(damage_roll + damage_modifier, 1)
+            result.damage = max((damage_roll + damage_modifier).total, 1)
             other.wounds += result.damage
-        elif other.uses_shield and attack_roll > (other.AC - 2):
+        elif other.uses_shield and attack_roll.total > (other.AC - 2):
             result.hit_type = HitType.SHIELD_GLANCE
-        elif attack_roll > 10:
+        elif attack_roll.total > 10:
             result.hit_type = HitType.ARMOR_GLANCE
+        else:
+            result.hit_type = None
 
         if ranged and weapon is not None and weapon.can_be_thrown:
             if main_hand:
