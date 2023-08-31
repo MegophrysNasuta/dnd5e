@@ -82,7 +82,7 @@ DieResultSet = Union[Iterable[DieResult], Generator[DieResult, None, None]]
 class DiceResult:
     """Summed iterable of DieResults"""
 
-    def __init__(self, *results: DieResultSet):
+    def __init__(self, results: DieResultSet):
         self.rolls = tuple(results)
         self.modifier = 0
 
@@ -116,7 +116,7 @@ class DiceResult:
 
     def __add__(self, value: int | DiceResult) -> DiceResult:
         if isinstance(value, DiceResult):
-            return DiceResult(*(list(self.rolls) + list(value.rolls)))
+            return DiceResult(list(self.rolls) + list(value.rolls))
         else:
             self.modifier = int(value)
         return self
@@ -126,7 +126,7 @@ class DiceResult:
         return self
 
     def __repr__(self):
-        return 'DiceResult%r' % (self.rolls,)
+        return 'DiceResult(%r)' % list(self.rolls)
 
     def __str__(self):
         rolls = ', '.join(self.str_results)
@@ -136,7 +136,7 @@ class DiceResult:
 
 
 def roll_dice(mDn: str,
-              rerolling_if: Iterable[str] = None,
+              rerolling_if: Optional[Iterable[str]] = None,
               dropping_lowest: bool = False) -> DiceResult:
     """
     Syntactic sugar for roll with other functions as options.
@@ -155,7 +155,7 @@ def roll_dice(mDn: str,
     if dropping_lowest:
         rolls = drop_lowest(rolls)
 
-    return DiceResult(*rolls)
+    return DiceResult(rolls)
 
 
 def roll(mDn: str) -> DieResultSet:
@@ -172,6 +172,8 @@ def roll(mDn: str) -> DieResultSet:
     m, n = map(int, str(mDn).split('d', 1))
     for die_roll in range(m):
         yield DieResult(die_max_value=n, result=random.randint(1, n))
+
+    return None
 
 
 def parse_condition(condition: str) -> Tuple[Callable[[int, int], bool], int]:
@@ -226,6 +228,8 @@ def reroll_if(rolls: DieResultSet,
             yield roll.reroll()
         else:
             yield roll
+
+    return None
 
 
 def drop_lowest(rolls: DieResultSet) -> DieResultSet:

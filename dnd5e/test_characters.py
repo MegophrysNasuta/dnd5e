@@ -1,7 +1,7 @@
 from . import roll_dice
 from .characters import Character, CharacterStat, HitType
 from .items import Armor, WeaponType
-from .weapons import longsword, spear
+from .srd_weapons import longsword, spear
 
 
 def test_armor_class():

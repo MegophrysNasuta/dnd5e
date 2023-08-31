@@ -38,7 +38,7 @@ class AttackResult:
         if self.attack_with is None:
             attack_type = 'The attack'
         else:
-            attack_type = 'The attack with %s' % self.attack_with.name
+            attack_type = 'The %s attack' % self.attack_with.name
 
         if self.target is None:
             target = 'target'
@@ -55,9 +55,6 @@ class AttackResult:
                                                               self.damage)
         else:
             desc = attack_type + ' missed %s.' % target
-
-        if self.target:
-            desc += '\n%s is now %s.' % (target, self.target.hp_status)
 
         print(desc)
         return self
@@ -270,7 +267,6 @@ class Character:
             else:
                 damage_modifier = min(modifier, 0)
             result.damage = max((damage_roll + damage_modifier).total, 1)
-            other.wounds += result.damage
         elif other.uses_shield and attack_roll.total > (other.AC - 2):
             result.hit_type = HitType.SHIELD_GLANCE
         elif attack_roll.total > 10:
